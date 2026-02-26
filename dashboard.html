@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダッシュボード - VideoScript AI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dashboard">
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="dashboard-nav">
+                <h1 class="logo">🎬 VideoScript AI</h1>
+                <div class="user-info">
+                    <div class="credits-badge" id="credits-display">
+                        <span id="credits-count">0</span> クレジット
+                    </div>
+                    <span id="user-email">user@example.com</span>
+                    <button onclick="logout()" class="btn-secondary" style="padding: 8px 20px;">ログアウト</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="container">
+            <div class="projects-header">
+                <h2 style="font-size: 32px;">プロジェクト一覧</h2>
+                <a href="create.html" class="btn-primary">+ 新規プロジェクト作成</a>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <div id="loading" style="text-align: center; padding: 60px 0; display: none;">
+                <p style="font-size: 18px; color: #636E72;">読み込み中...</p>
+            </div>
+
+            <div id="empty-state" style="text-align: center; padding: 80px 0; display: none;">
+                <h3 style="font-size: 24px; margin-bottom: 20px; color: #636E72;">
+                    プロジェクトがまだありません
+                </h3>
+                <p style="color: #636E72; margin-bottom: 30px;">
+                    最初のプロジェクトを作成して、AIに台本を生成させましょう！
+                </p>
+                <a href="create.html" class="btn-primary btn-large">新規プロジェクト作成</a>
+            </div>
+
+            <div class="projects-grid" id="projects-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://videoscript-api.YOUR-SUBDOMAIN.workers.dev';
+        
+        let token = localStorage.getItem('token');
+        let userId = localStorage.getItem('userId');
+
+        // 未ログインの場合はログインページへ
+        if (!token) {
+            window.location.href = 'login.html';
+        }
+
+        // ページ読み込み時にプロフィールとプロジェクトを取得
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadProfile();
+            await loadProjects();
+        });
+
+        // プロフィール情報取得
+        async function loadProfile() {
+            try {
+                const response = await fetch(`${API_BASE}/api/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('user-email').textContent = data.email;
+                    document.getElementById('credits-count').textContent = data.credits;
+                } else if (response.status === 401) {
+                    // トークン無効
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userId');
+                    window.location.href = 'login.html';
+                }
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        // プロジェクト一覧取得
+        async function loadProjects() {
+            const loading = document.getElementById('loading');
+            const emptyState = document.getElementById('empty-state');
+            const projectsGrid = document.getElementById('projects-grid');
+
+            loading.style.display = 'block';
+            emptyState.style.display = 'none';
+            projectsGrid.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/projects`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                const projects = await response.json();
+
+                loading.style.display = 'none';
+
+                if (projects.length === 0) {
+                    emptyState.style.display = 'block';
+                } else {
+                    projectsGrid.style.display = 'grid';
+                    projectsGrid.innerHTML = projects.map(project => `
+                        <div class="project-card">
+                            <div class="project-title">${escapeHtml(project.title)}</div>
+                            <div class="project-meta">
+                                ${formatFramework(project.framework)} | ${project.duration}分 | ${formatStyle(project.style)}
+                            </div>
+                            <div class="project-meta" style="margin-bottom: 15px;">
+                                作成日: ${formatDate(project.created_at)}
+                            </div>
+                            <span class="project-status status-${project.status}">
+                                ${formatStatus(project.status)}
+                            </span>
+                            <div style="margin-top: 20px;">
+                                <a href="editor.html?id=${project.id}" class="btn-primary" style="padding: 10px 20px; font-size: 14px;">
+                                    編集する
+                                </a>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                loading.style.display = 'none';
+                showAlert('プロジェクトの読み込みに失敗しました', 'error');
+            }
+        }
+
+        // ログアウト
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            window.location.href = 'index.html';
+        }
+
+        // ヘルパー関数
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatFramework(framework) {
+            const frameworks = {
+                'threeAct': '三幕構成',
+                'cams': 'CAMS',
+                'abcd': 'ABCD',
+                'prep': 'PREP法',
+                'problemSolution': 'Problem-Solution',
+                'customerJourney': 'カスタマージャーニー'
+            };
+            return frameworks[framework] || framework;
+        }
+
+        function formatStyle(style) {
+            const styles = {
+                'corporate': 'コーポレート',
+                'promotional': 'プロモーション',
+                'educational': '教育',
+                'documentary': 'ドキュメンタリー',
+                'brand': 'ブランド'
+            };
+            return styles[style] || style;
+        }
+
+        function formatStatus(status) {
+            const statuses = {
+                'draft': '下書き',
+                'processing': '生成中',
+                'completed': '完成',
+                'failed': '失敗'
+            };
+            return statuses[status] || status;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アカウント作成 - VideoScript AI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>🎬 アカウント作成</h2>
+            <p style="text-align: center; color: #636E72; margin-bottom: 30px;">
+                無料で10クレジットをプレゼント
+            </p>
+            
+            <div id="alert-container"></div>
+            
+            <form id="signup-form">
+                <div class="form-group">
+                    <label for="email">メールアドレス</label>
+                    <input type="email" id="email" name="email" required placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">パスワード</label>
+                    <input type="password" id="password" name="password" required placeholder="8文字以上" minlength="8">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password-confirm">パスワード（確認）</label>
+                    <input type="password" id="password-confirm" name="password-confirm" required placeholder="パスワードを再入力">
+                </div>
+                
+                <button type="submit" class="btn-submit" id="submit-btn">
+                    アカウント作成
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                すでにアカウントをお持ちですか？ <a href="login.html">ログイン</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // APIエンドポイント（後でWorkerのURLに変更）
+        const API_BASE = 'https://videoscript-api.YOUR-SUBDOMAIN.workers.dev';
+        
+        const form = document.getElementById('signup-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const alertContainer = document.getElementById('alert-container');
+        
+        // URL パラメータからプラン取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedPlan = urlParams.get('plan');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password-confirm').value;
+            
+            // バリデーション
+            if (password !== passwordConfirm) {
+                showAlert('パスワードが一致しません', 'error');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showAlert('パスワードは8文字以上にしてください', 'error');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '作成中...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // トークンを保存
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userId', data.userId);
+                    
+                    showAlert('アカウント作成成功！ダッシュボードに移動します...', 'success');
+                    
+                    // プラン選択がある場合は料金ページへ、なければダッシュボードへ
+                    setTimeout(() => {
+                        if (selectedPlan) {
+                            window.location.href = `pricing.html?plan=${selectedPlan}`;
+                        } else {
+                            window.location.href = 'dashboard.html';
+                        }
+                    }, 1500);
+                } else {
+                    showAlert(data.error || 'アカウント作成に失敗しました', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'アカウント作成';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('ネットワークエラーが発生しました', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'アカウント作成';
+            }
+        });
+        
+        function showAlert(message, type) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            // 5秒後に自動削除
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

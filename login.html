@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - VideoScript AI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <h2>🎬 ログイン</h2>
+            
+            <div id="alert-container"></div>
+            
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">メールアドレス</label>
+                    <input type="email" id="email" name="email" required placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">パスワード</label>
+                    <input type="password" id="password" name="password" required placeholder="パスワード">
+                </div>
+                
+                <button type="submit" class="btn-submit" id="submit-btn">
+                    ログイン
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                アカウントをお持ちでないですか？ <a href="signup.html">アカウント作成</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://videoscript-api.YOUR-SUBDOMAIN.workers.dev';
+        
+        const form = document.getElementById('login-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const alertContainer = document.getElementById('alert-container');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'ログイン中...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // トークンを保存
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('userId', data.userId);
+                    
+                    showAlert('ログイン成功！', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showAlert(data.error || 'ログインに失敗しました', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'ログイン';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('ネットワークエラーが発生しました', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'ログイン';
+            }
+        });
+        
+        function showAlert(message, type) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
