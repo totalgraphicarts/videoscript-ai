@@ -1,217 +1,138 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ダッシュボード - VideoScript AI</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="dashboard">
-    <div class="dashboard-header">
-        <div class="container">
-            <div class="dashboard-nav">
-                <h1 class="logo">🎬 VideoScript AI</h1>
-                <div class="user-info">
-                    <div class="credits-badge" id="credits-display">
-                        <span id="credits-count">0</span> クレジット
-                    </div>
-                    <span id="user-email">user@example.com</span>
-                    <button onclick="logout()" class="btn-secondary" style="padding: 8px 20px;">ログアウト</button>
-                </div>
-            </div>
-        </div>
+<!-- AI生成セクション -->
+<section id="generate-section" style="margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
+  <h2>🎬 新しいビデオスクリプトを生成</h2>
+  
+  <div id="generate-form">
+    <div style="margin-bottom: 15px;">
+      <label for="framework">フレームワークを選択:</label>
+      <select id="framework" required style="width: 100%; padding: 8px;">
+        <option value="">-- 選択してください --</option>
+        <option value="threeAct">Three-Act Structure (3段階構成)</option>
+        <option value="cams">CAMS (共感・訴求・動機・行動)</option>
+        <option value="abcd">ABCD (興味・ブランド・感情・行動)</option>
+        <option value="prep">PREP Method (結論・理由・例・再結論)</option>
+        <option value="problemSolution">Problem-Solution (問題・解決)</option>
+        <option value="customerJourney">Customer Journey (顧客の旅)</option>
+      </select>
     </div>
 
-    <div class="dashboard-content">
-        <div class="container">
-            <div class="projects-header">
-                <h2 style="font-size: 32px;">プロジェクト一覧</h2>
-                <a href="create.html" class="btn-primary">+ 新規プロジェクト作成</a>
-            </div>
-
-            <div id="alert-container"></div>
-
-            <div id="loading" style="text-align: center; padding: 60px 0; display: none;">
-                <p style="font-size: 18px; color: #636E72;">読み込み中...</p>
-            </div>
-
-            <div id="empty-state" style="text-align: center; padding: 80px 0; display: none;">
-                <h3 style="font-size: 24px; margin-bottom: 20px; color: #636E72;">
-                    プロジェクトがまだありません
-                </h3>
-                <p style="color: #636E72; margin-bottom: 30px;">
-                    最初のプロジェクトを作成して、AIに台本を生成させましょう！
-                </p>
-                <a href="create.html" class="btn-primary btn-large">新規プロジェクト作成</a>
-            </div>
-
-            <div class="projects-grid" id="projects-grid"></div>
-        </div>
+    <div style="margin-bottom: 15px;">
+      <label for="duration">動画の長さ (分):</label>
+      <input type="number" id="duration" min="1" max="10" value="2" required style="width: 100%; padding: 8px;">
     </div>
 
-    <script>
-        const API_BASE = 'https://videoscript-ai.totalgraphicarts.workers.dev';
-        
-        let token = localStorage.getItem('token');
-        let userId = localStorage.getItem('userId');
+    <div style="margin-bottom: 15px;">
+      <label for="style">スタイル:</label>
+      <select id="style" required style="width: 100%; padding: 8px;">
+        <option value="">-- 選択してください --</option>
+        <option value="professional">Professional (プロフェッショナル)</option>
+        <option value="casual">Casual (カジュアル)</option>
+        <option value="educational">Educational (教育的)</option>
+        <option value="entertaining">Entertaining (エンターテイニング)</option>
+      </select>
+    </div>
 
-        // 未ログインの場合はログインページへ
-        if (!token) {
-            window.location.href = 'login.html';
-        }
+    <div style="margin-bottom: 15px;">
+      <label for="tone">トーン:</label>
+      <select id="tone" required style="width: 100%; padding: 8px;">
+        <option value="">-- 選択してください --</option>
+        <option value="formal">Formal (フォーマル)</option>
+        <option value="friendly">Friendly (フレンドリー)</option>
+        <option value="persuasive">Persuasive (説得的)</option>
+        <option value="informative">Informative (情報的)</option>
+      </select>
+    </div>
 
-        // ページ読み込み時にプロフィールとプロジェクトを取得
-        window.addEventListener('DOMContentLoaded', async () => {
-            await loadProfile();
-            await loadProjects();
-        });
+    <div style="margin-bottom: 15px;">
+      <label for="title">タイトル (オプション):</label>
+      <input type="text" id="title" placeholder="例: 新製品紹介ビデオ" style="width: 100%; padding: 8px;">
+    </div>
 
-        // プロフィール情報取得
-        async function loadProfile() {
-            try {
-                const response = await fetch(`${API_BASE}/api/profile`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
+    <button id="generate-btn" style="width: 100%; padding: 12px; background-color: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;">
+      AI生成を開始
+    </button>
+  </div>
 
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('user-email').textContent = data.email;
-                    document.getElementById('credits-count').textContent = data.credits;
-                } else if (response.status === 401) {
-                    // トークン無効
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('userId');
-                    window.location.href = 'login.html';
-                }
-            } catch (error) {
-                console.error('Error loading profile:', error);
-            }
-        }
+  <div id="generate-result" style="margin-top: 20px; display: none;">
+    <h3>生成結果:</h3>
+    <pre id="result-content" style="background-color: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto;"></pre>
+  </div>
 
-        // プロジェクト一覧取得
-        async function loadProjects() {
-            const loading = document.getElementById('loading');
-            const emptyState = document.getElementById('empty-state');
-            const projectsGrid = document.getElementById('projects-grid');
+  <div id="generate-error" style="margin-top: 20px; display: none; color: red;">
+    <p id="error-content"></p>
+  </div>
 
-            loading.style.display = 'block';
-            emptyState.style.display = 'none';
-            projectsGrid.style.display = 'none';
+  <div id="generate-loading" style="margin-top: 20px; display: none; text-align: center;">
+    <p>⏳ AI生成中...</p>
+    <progress id="progress-bar" style="width: 100%;"></progress>
+  </div>
+</section>
 
-            try {
-                const response = await fetch(`${API_BASE}/api/projects`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
+<script>
+  // API ベース URL
+  const API_BASE = 'https://videoscript-ai.totalgraphicarts.workers.dev';
 
-                const projects = await response.json();
+  // AI生成ボタンのクリックイベント
+  document.getElementById('generate-btn').addEventListener('click', async () => {
+    const framework = document.getElementById('framework').value;
+    const duration = document.getElementById('duration').value;
+    const style = document.getElementById('style').value;
+    const tone = document.getElementById('tone').value;
+    const title = document.getElementById('title').value;
 
-                loading.style.display = 'none';
+    // バリデーション
+    if (!framework || !duration || !style || !tone) {
+      alert('すべての必須項目を選択してください');
+      return;
+    }
 
-                if (projects.length === 0) {
-                    emptyState.style.display = 'block';
-                } else {
-                    projectsGrid.style.display = 'grid';
-                    projectsGrid.innerHTML = projects.map(project => `
-                        <div class="project-card">
-                            <div class="project-title">${escapeHtml(project.title)}</div>
-                            <div class="project-meta">
-                                ${formatFramework(project.framework)} | ${project.duration}分 | ${formatStyle(project.style)}
-                            </div>
-                            <div class="project-meta" style="margin-bottom: 15px;">
-                                作成日: ${formatDate(project.created_at)}
-                            </div>
-                            <span class="project-status status-${project.status}">
-                                ${formatStatus(project.status)}
-                            </span>
-                            <div style="margin-top: 20px;">
-                                <a href="editor.html?id=${project.id}" class="btn-primary" style="padding: 10px 20px; font-size: 14px;">
-                                    編集する
-                                </a>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            } catch (error) {
-                console.error('Error loading projects:', error);
-                loading.style.display = 'none';
-                showAlert('プロジェクトの読み込みに失敗しました', 'error');
-            }
-        }
+    // ローディング表示
+    document.getElementById('generate-loading').style.display = 'block';
+    document.getElementById('generate-result').style.display = 'none';
+    document.getElementById('generate-error').style.display = 'none';
 
-        // ログアウト
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('userId');
-            window.location.href = 'index.html';
-        }
+    try {
+      // トークンを取得
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('認証トークンが見つかりません。ログインしてください。');
+      }
 
-        // ヘルパー関数
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+      // API にリクエスト送信
+      const response = await fetch(`${API_BASE}/api/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          framework,
+          duration: parseInt(duration),
+          style,
+          tone,
+          title: title || undefined,
+        }),
+      });
 
-        function formatFramework(framework) {
-            const frameworks = {
-                'threeAct': '三幕構成',
-                'cams': 'CAMS',
-                'abcd': 'ABCD',
-                'prep': 'PREP法',
-                'problemSolution': 'Problem-Solution',
-                'customerJourney': 'カスタマージャーニー'
-            };
-            return frameworks[framework] || framework;
-        }
+      const data = await response.json();
 
-        function formatStyle(style) {
-            const styles = {
-                'corporate': 'コーポレート',
-                'promotional': 'プロモーション',
-                'educational': '教育',
-                'documentary': 'ドキュメンタリー',
-                'brand': 'ブランド'
-            };
-            return styles[style] || style;
-        }
+      if (!response.ok) {
+        throw new Error(data.error || 'AI生成に失敗しました');
+      }
 
-        function formatStatus(status) {
-            const statuses = {
-                'draft': '下書き',
-                'processing': '生成中',
-                'completed': '完成',
-                'failed': '失敗'
-            };
-            return statuses[status] || status;
-        }
+      // 結果表示
+      document.getElementById('generate-loading').style.display = 'none';
+      document.getElementById('generate-result').style.display = 'block';
+      document.getElementById('result-content').textContent = JSON.stringify(data, null, 2);
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleString('ja-JP', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
+      // クレジット更新
+      location.reload(); // ページをリロードしてクレジットを更新
 
-        function showAlert(message, type) {
-            const alertContainer = document.getElementById('alert-container');
-            alertContainer.innerHTML = `
-                <div class="alert alert-${type}">
-                    ${message}
-                </div>
-            `;
-            
-            setTimeout(() => {
-                alertContainer.innerHTML = '';
-            }, 5000);
-        }
-    </script>
-</body>
-</html>
+    } catch (error) {
+      console.error('Error:', error);
+      document.getElementById('generate-loading').style.display = 'none';
+      document.getElementById('generate-error').style.display = 'block';
+      document.getElementById('error-content').textContent = `エラー: ${error.message}`;
+    }
+  });
+</script>
