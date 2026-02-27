@@ -30,12 +30,13 @@
             </form>
             
             <div class="auth-footer">
-                アカウントをお持ちでないですか？ <a href="signup.html">アカウント作成</a>
+                アカウントをお持ちでない方は <a href="signup.html">こちらから作成</a>
             </div>
         </div>
     </div>
 
     <script>
+        // ✅ API ベース URL
         const API_BASE = 'https://videoscript-ai.totalgraphicarts.workers.dev';
         
         const form = document.getElementById('login-form');
@@ -67,11 +68,12 @@
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('userId', data.userId);
                     
-                    showAlert('ログイン成功！', 'success');
+                    showAlert('ログイン成功！ダッシュボードに移動します...', 'success');
                     
+                    // ダッシュボードへ移動
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
-                    }, 1000);
+                    }, 1500);
                 } else {
                     showAlert(data.error || 'ログインに失敗しました', 'error');
                     submitBtn.disabled = false;
