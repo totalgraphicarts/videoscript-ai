@@ -1,0 +1,18 @@
+{
+  "name": "videoscript-ai",
+  "main": "src/index.js",
+  "type": "javascript",
+  "observability": {
+    "enabled": true
+  },
+  "env": {
+    "production": {
+      "routes": [
+        {
+          "pattern": "videoscript-ai.totalgraphicarts.workers.dev/*",
+          "zone_name": "totalgraphicarts.com"
+        }
+      ]
+    }
+  }
+}
