@@ -1,8 +1,8 @@
 /api/signup https://videoscript-ai.totalgraphicarts.workers.dev/api/signup 200
-   /api/login https://videoscript-ai.totalgraphicarts.workers.dev/api/login 200
-   /api/profile https://videoscript-ai.totalgraphicarts.workers.dev/api/profile 200
-   /api/generate https://videoscript-ai.totalgraphicarts.workers.dev/api/generate 200
-   /api/projects https://videoscript-ai.totalgraphicarts.workers.dev/api/projects 200
-   /api/projects/* https://videoscript-ai.totalgraphicarts.workers.dev/api/projects/:splat 200
-   /api/checkout https://videoscript-ai.totalgraphicarts.workers.dev/api/checkout 200
-   /webhook/stripe https://videoscript-ai.totalgraphicarts.workers.dev/webhook/stripe 200
+/api/login https://videoscript-ai.totalgraphicarts.workers.dev/api/login 200
+/api/profile https://videoscript-ai.totalgraphicarts.workers.dev/api/profile 200
+/api/generate https://videoscript-ai.totalgraphicarts.workers.dev/api/generate 200
+/api/projects https://videoscript-ai.totalgraphicarts.workers.dev/api/projects 200
+/api/projects/* https://videoscript-ai.totalgraphicarts.workers.dev/api/projects/:splat 200
+/api/checkout https://videoscript-ai.totalgraphicarts.workers.dev/api/checkout 200
+/webhook/stripe https://videoscript-ai.totalgraphicarts.workers.dev/webhook/stripe 200
